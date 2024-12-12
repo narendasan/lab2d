@@ -32,29 +32,30 @@ jobs:
           prerelease: false
 
   build-wheel:
-    name: Build-wheel ${{ matrix.cfg.name }} for Python ${{ matrix.py.version }}
+    name: Build-wheel ${{ matrix.cfg.name }} for Python ${{ matrix.python-version }}
 
     runs-on: ${{ matrix.cfg.os }}
 
     needs: create-release
 
     strategy:
+      fail-fast: false
       matrix:
         cfg:
           - { name: 'ManyLinux 2.35 LLVM+libstdc++', os: 'ubuntu-22.04', cc: clang, cxx: clang++, config: --linkopt=-fuse-ld=lld }
           - { name: 'ManyLinux 2.31 LLVM+libstdc++', os: 'ubuntu-20.04', cc: clang, cxx: clang++, config: --linkopt=-fuse-ld=lld }
-          - { name: 'MacOS 11 x86_64 LLVM+libc++', os: 'macos-11', cc: clang, cxx: clang++, config: --config=libc++ --config=macos }
-          - { name: 'MacOS 12 x86_64 LLVM+libc++', os: 'macos-12', cc: clang, cxx: clang++, config: --config=libc++ --config=macos }
           - { name: 'MacOS 13 x86_64 LLVM+libc++', os: 'macos-13', cc: clang, cxx: clang++, config: --config=libc++ --config=macos }
-          - { name: 'MacOS 12 ARM64 LLVM+libc++', os: 'macos-12', cc: clang, cxx: clang++,
-              config: --config=libc++ --config=macos_arm64 --repo_env=PY_PLATFORM_OVERRIDE=macosx_12_0_arm64 }
           - { name: 'MacOS 13 ARM64 LLVM+libc++', os: 'macos-13', cc: clang, cxx: clang++,
               config: --config=libc++ --config=macos_arm64 --repo_env=PY_PLATFORM_OVERRIDE=macosx_13_0_arm64 }
+          - { name: 'MacOS 14 ARM64 LLVM+libc++', os: 'macos-14', cc: clang, cxx: clang++,
+              config: --config=libc++ --config=macos_arm64 --repo_env=PY_PLATFORM_OVERRIDE=macosx_14_0_arm64 }
         python-version:
           - '3.8'
           - '3.9'
           - '3.10'
           - '3.11'
+          - '3.12'
+          - '3.13'
 
     env:
       CC:  ${{ matrix.cfg.cc }}
@@ -69,7 +70,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python Dependencies
-        run: pip3 install --upgrade pip packaging check-wheel-contents
+        run: |
+          pip3 install --upgrade setuptools packaging
+          which python3
+          python3 --version
+          pip3 list
+          bazel --version
 
       - name: Build for Python ${{ matrix.python-version }}
         run: bazel --bazelrc=.bazelrc build --compilation_mode=opt --dynamic_mode=off --config=luajit ${{ matrix.cfg.config }} //dmlab2d:dmlab2d_wheel
@@ -81,10 +87,12 @@ jobs:
           echo WHEEL_NAME="${WHEEL_NAME}" >> "${GITHUB_ENV}"
 
       - name: Check wheel contents
-        run: check-wheel-contents bazel-bin/dmlab2d/${{ env.WHEEL_NAME }}
+        run: |
+          pip3 install check-wheel-contents
+          check-wheel-contents bazel-bin/dmlab2d/${{ env.WHEEL_NAME }}
 
-      - name: Test wheel
-        if: (!contains(env.WHEEL_NAME, 'arm64'))
+      - name: Test wheel ${{ env.WHEEL_NAME }}
+        if: matrix.cfg.os != 'macos-13' && matrix.cfg.config != 'macos_arm64'
         run: |
           pip install bazel-bin/dmlab2d/${{ env.WHEEL_NAME }}
           python -I - <<'____HERE'
