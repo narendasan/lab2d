@@ -56,6 +56,13 @@ function install_dmlab2d() {
           --linkopt=-fuse-ld=lld
       )
       ;;
+    'Darwin 24.'*arm)
+      local -r EXTRA_CONFIG=(
+          --config=libc++
+          --config=macos_arm64
+          --repo_env=PY_PLATFORM_OVERRIDE=macosx_15_0_arm64
+      )
+      ;;
     'Darwin 22.'*arm)
       local -r EXTRA_CONFIG=(
           --config=libc++
