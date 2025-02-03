@@ -109,9 +109,8 @@ http_archive(
 http_archive(
     name = "luajit_archive",
     build_file = "@//bazel:luajit.BUILD",
-    sha256 = "4af5d94608a7ab72c9a7f72833a9222a7e0a298255e058902c4a59012c53bbfc",
-    strip_prefix = "LuaJIT-f0ff869bc2fffa17bb765c4c773457578da125a9",
-    urls = ["https://github.com/LuaJIT/LuaJIT/archive/f0ff869bc2fffa17bb765c4c773457578da125a9.tar.gz"],
+    strip_prefix = "LuaJIT-a4f56a459a588ae768801074b46ba0adcfb49eb1",
+    urls = ["https://github.com/LuaJIT/LuaJIT/archive/a4f56a459a588ae768801074b46ba0adcfb49eb1.tar.gz"],
 )
 
 http_archive(

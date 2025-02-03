@@ -220,8 +220,10 @@ cc_library(
         "src/lua.h",
         "src/lua.hpp",
         "src/luaconf.h",
-        "src/luajit.h",
         "src/lualib.h",
+
+        # Generated files.
+        "src/luajit.h",
     ],
     defines = UNWINDER_DEFINES,
     includes = ["src"],
@@ -275,6 +277,18 @@ genrule(
     ]),
     outs = ["src/host/buildvm_arch.h"],
     cmd = "$(location :minilua) $(location dynasm/dynasm.lua)" + DYNASM_FLAGS_ARCH + DYNASM_FLAGS_UNWIND + " -o $@ $(location :src/" + DYNASM_SOURCE + ")",
+    tools = [":minilua"],
+)
+
+genrule(
+    name = "luajit_h",
+    srcs = glob([
+        "src/luajit_rolling.h",
+        "src/host/genversion.lua",
+        ".relver"
+    ]),
+    outs = ["src/luajit.h"],
+    cmd = "$(location :minilua) $(location src/host/genversion.lua) $(location src/luajit_rolling.h) $(location .relver) $(location src/luajit.h)",
     tools = [":minilua"],
 )
 
